@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QMS 外包装图像识别 · 原型项目（2 页可切换）</title>
+<style>
+:root{
+
+  /* 背景 */
+  --bg-page:#F5F6F8; --bg-card:#FFFFFF; --bg-sub:#F8F9FB; --overlay:rgba(16,24,40,0.45);
+  /* 文本 */
+  --t1:#1F2733; --t2:#5B6675; --t-dis:#97A0AD;
+  /* 品牌主色 QMS 蓝 */
+  --brand:#2D5BD7; --brand-h:#234AB5; --brand-a:#1E3F9C; --brand-l:#EEF2FC; --primary:var(--brand);
+  /* 通过 */
+  --ok:#16A34A; --ok-bg:#E7F6EC; --ok-tx:#166534;
+  /* 不通过 */
+  --bad:#DC2626; --bad-bg:#FDECEC; --bad-tx:#B91C1C;
+  /* 待人工复核 */
+  --warn:#D97706; --warn-bg:#FEF3E2; --warn-tx:#92400E;
+  /* 处理中 */
+  --info:#2563EB; --info-bg:#EFF4FF; --info-tx:#1D4ED8;
+  /* 不适用 */
+  --na:#97A0AD; --na-bg:#F1F3F6; --na-tx:#5B6675;
+  /* 差异 */
+  --diff:#DC2626; --diff-mask:rgba(220,38,38,0.12);
+  /* 边框 */
+  --bd:#E3E6EB; --bd-s:#CBD2DC; --bd-f:#EDF0F3;
+  /* 圆角 */
+  --r-card:8px; --r-btn:6px; --r-badge:4px; --r-thumb:4px;
+  /* 字体 */
+  --f-cn:"PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans SC",-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,monospace;
+
+
+    --bg:#F5F6F8; --surface:#FFFFFF; --surface-subtle:#F8F9FB;
+    --text:#1F2733; --text2:#5B6675; --text-dis:#97A0AD;
+    --brand:#2D5BD7; --brand-hover:#234AB5; --brand-subtle:#EEF2FC;
+    --ok:#16A34A; --ok-bg:#E7F6EC; --bad:#DC2626; --bad-bg:#FDECEC;
+    --warn:#D97706; --warn-bg:#FEF3E2; --info:#2563EB; --info-bg:#EFF4FF;
+    --border:#E3E6EB; --border-strong:#CBD2DC; --divider:#EDF0F3;
+    --radius:8px; --radius-sm:6px;
+    --font:"PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans SC",-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:"SF Mono","JetBrains Mono","Roboto Mono",Menlo,Consolas,monospace;
+  
+}
+
+/* ===== 项目外壳：antd 风格页面切换 ===== */
+.app-shell{position:sticky;top:0;z-index:1000;background:var(--bg-card);border-bottom:1px solid var(--bd);padding:0 24px;display:flex;align-items:center;gap:28px;box-shadow:0 1px 4px rgba(16,24,40,.06)}
+.app-brand{font-size:14px;font-weight:600;color:var(--t1);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.app-brand-mark{width:6px;height:18px;border-radius:3px;background:var(--brand);display:inline-block;flex:none}
+.app-brand-sub{font-size:12px;color:var(--t2);font-weight:400}
+.page-tab{appearance:none;-webkit-appearance:none;border:0;border-bottom:2px solid transparent;background:none;padding:14px 2px 12px;font:600 14px/1.4 var(--f-cn);color:var(--t2);cursor:pointer;transition:color .2s,border-color .2s;white-space:nowrap}
+.page-tab:hover{color:var(--brand)}
+.page-tab:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.page-tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+.page-panel{display:none}
+.page-panel.active{display:block}
+
+/* ===== 页面 1 · 抽检比对执行页（作用域 .pg-inspect） ===== */
+
+
+/* ============ 设计令牌（严格取值） ============ */
+
+
+
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+
+html,body{background:var(--bg-page);color:var(--t1);font-family:var(--f-cn);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+
+
+.pg-inspect .mono{font-family:var(--f-mono)}
+
+
+.pg-inspect .muted{color:var(--t2);font-size:12px}
+
+
+.pg-inspect .h1{font-size:20px;font-weight:600;line-height:1.3}
+
+
+.pg-inspect .h2{font-size:16px;font-weight:600;line-height:1.4}
+
+
+.pg-inspect .h3{font-size:14px;font-weight:600;line-height:1.4}
+
+
+.pg-inspect .mt{margin-top:24px}
+
+
+
+
+/* ============ 布局 ============ */
+
+
+.pg-inspect .app{max-width:1440px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+
+
+.pg-inspect .card{background:var(--bg-card);border:1px solid var(--bd);border-radius:var(--r-card)}
+
+
+.pg-inspect .card-pad{padding:16px}
+
+
+
+
+/* 顶部区 */
+
+
+.pg-inspect .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px}
+
+
+.pg-inspect .crumbs{font-size:13px;color:var(--t2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+
+.pg-inspect .crumb-h1{display:inline;margin:0;color:var(--t1);font-size:20px;font-weight:600}
+
+
+.pg-inspect .crumbs .sep{color:var(--t-dis)}
+
+
+.pg-inspect .topbar-right{display:flex;align-items:center;gap:12px}
+
+
+.pg-inspect .order-no{font-size:13px;color:var(--t2);background:var(--bg-sub);border:1px solid var(--bd);border-radius:var(--r-btn);padding:6px 10px}
+
+
+
+
+/* Tabs */
+
+
+.pg-inspect .tabs{display:flex;gap:4px;padding:0 8px;border-bottom:1px solid var(--bd);overflow-x:auto}
+
+
+.pg-inspect .tab{padding:10px 14px;font-size:13px;color:var(--t2);white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,background .15s}
+
+
+.pg-inspect .tab:hover{color:var(--t1);background:var(--bg-sub)}
+
+
+.pg-inspect .tab.active{color:var(--brand);font-weight:600;background:var(--brand-l);border-bottom-color:var(--brand)}
+
+
+
+
+/* 全局汇总条 */
+
+
+.pg-inspect .summary-bar{display:flex;align-items:center;gap:32px;padding:14px 20px;flex-wrap:wrap}
+
+
+.pg-inspect .sum-item{display:flex;flex-direction:column;gap:2px}
+
+
+.pg-inspect .sum-item .k{font-size:12px;color:var(--t2)}
+
+
+.pg-inspect .sum-item .v{font-size:20px;font-weight:600;font-family:var(--f-mono);color:var(--t1)}
+
+
+.pg-inspect .sum-sep{width:1px;height:34px;background:var(--bd)}
+
+
+.pg-inspect .sum-dist{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+
+
+.pg-inspect .dist{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--t2)}
+
+
+.pg-inspect .db{width:9px;height:9px;border-radius:2px;display:inline-block}
+
+
+.pg-inspect .db.ok{background:var(--ok)}
+.pg-inspect .db.bad{background:var(--bad)}
+.pg-inspect .db.warn{background:var(--warn)}
+.pg-inspect .db.na{background:var(--na)}
+.pg-inspect .db.info{background:var(--info)}
+
+
+
+
+/* 三栏 */
+
+
+.pg-inspect .layout{display:flex;gap:16px;align-items:flex-start}
+
+
+.pg-inspect .col-left{flex:0 0 300px}
+
+
+.pg-inspect .col-mid{flex:1 1 auto;min-width:0}
+
+
+.pg-inspect .col-right{flex:0 0 320px}
+
+
+
+
+/* 左栏导航 */
+
+
+.pg-inspect .nav-box{border-bottom:1px solid var(--bd-f)}
+
+
+.pg-inspect .nav-box:last-child{border-bottom:none}
+
+
+.pg-inspect .nav-box-h{padding:10px 16px;font-size:13px;font-weight:600;color:var(--t1);display:flex;align-items:center;justify-content:space-between;background:var(--bg-sub)}
+
+
+.pg-inspect .nav-box-sub{font-size:12px;color:var(--t2);font-weight:400}
+
+
+.pg-inspect .nav-item{display:flex;align-items:center;gap:8px;padding:9px 16px 9px 22px;cursor:pointer;border-left:3px solid transparent;transition:background .15s}
+
+
+.pg-inspect .nav-item:hover{background:var(--bg-sub)}
+
+
+.pg-inspect .nav-item.active{background:var(--brand-l);border-left-color:var(--brand)}
+
+
+.pg-inspect .navdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+
+
+.pg-inspect .navdot.ok{background:var(--ok)}
+.pg-inspect .navdot.bad{background:var(--bad)}
+.pg-inspect .navdot.warn{background:var(--warn)}
+.pg-inspect .navdot.na{background:var(--na)}
+.pg-inspect .navdot.info{background:var(--info)}
+
+
+.pg-inspect .nav-item-name{flex:1 1 auto;font-size:13px;color:var(--t1)}
+
+
+.pg-inspect .nav-item.active .nav-item-name{font-weight:600}
+
+
+.pg-inspect .nav-item-tag{font-size:11px;color:var(--t2)}
+
+
+
+
+/* 中栏详情 */
+
+
+.pg-inspect .detail-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
+
+
+.pg-inspect .d-desc{margin-top:6px;color:var(--t2);font-size:13px;max-width:640px}
+
+
+.pg-inspect .detail-meta{text-align:right;flex:0 0 auto;display:flex;flex-direction:column;gap:4px}
+
+
+.pg-inspect .detail-meta .mono{color:var(--t1);font-size:13px}
+
+
+
+
+/* 上传区 */
+
+
+.pg-inspect .upload-drop{border:1.5px dashed var(--bd-s);border-radius:var(--r-btn);background:var(--bg-sub);padding:22px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+
+
+.pg-inspect .upload-drop:hover{border-color:var(--brand);background:var(--brand-l)}
+
+
+.pg-inspect .upload-drop svg{display:block;margin:0 auto 8px}
+
+
+.pg-inspect .upload-drop .u-main{font-size:13px;color:var(--t1)}
+
+
+.pg-inspect .upload-drop .u-sub{font-size:12px;color:var(--t2);margin-top:2px}
+
+
+.pg-inspect .gate-demo{display:flex;gap:8px;margin-top:10px}
+
+
+.pg-inspect .gate-feedback{display:none;align-items:center;gap:8px;margin-top:10px;padding:8px 12px;border-radius:var(--r-btn);font-size:13px;font-weight:600}
+
+
+.pg-inspect .gate-feedback.show{display:inline-flex}
+
+
+.pg-inspect .gate-feedback .dot{width:8px;height:8px;border-radius:50%}
+
+
+.pg-inspect .gate-feedback.ok{background:var(--ok-bg);color:var(--ok-tx)}
+.pg-inspect .gate-feedback.ok .dot{background:var(--ok)}
+
+
+.pg-inspect .gate-feedback.bad{background:var(--bad-bg);color:var(--bad-tx)}
+.pg-inspect .gate-feedback.bad .dot{background:var(--bad)}
+
+
+
+
+/* 比对结果表 */
+
+
+.pg-inspect .cmp-list{border:1px solid var(--bd);border-radius:6px;overflow:hidden}
+
+
+.pg-inspect .cmp-row{display:grid;grid-template-columns:88px 104px 58px 1fr;align-items:center;gap:8px;padding:0 12px;height:40px;border-bottom:1px solid var(--bd-f);font-size:13px}
+
+
+.pg-inspect .cmp-row:last-child{border-bottom:none}
+
+
+.pg-inspect .cmp-row.head{background:var(--bg-sub);font-weight:600;color:var(--t2);font-size:12px;height:36px}
+
+
+.pg-inspect .cmp-name{font-weight:600;color:var(--t1)}
+
+
+.pg-inspect .cmp-score{font-family:var(--f-mono);text-align:right;color:var(--t2)}
+
+
+.pg-inspect .cmp-note{color:var(--t2)}
+
+
+
+
+/* 三态判定 */
+
+
+.pg-inspect .verdict{border:1px solid var(--bd);border-radius:6px;padding:14px;background:var(--bg-sub)}
+
+
+.pg-inspect .verdict-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+
+.pg-inspect .verdict-text{font-size:14px;color:var(--t1)}
+
+
+.pg-inspect .verdict-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+
+
+.pg-inspect .note-field{margin-top:14px}
+
+
+.pg-inspect .note-label{display:block;font-size:12px;color:var(--t2);margin-bottom:6px}
+
+
+.pg-inspect .note-input{width:100%;min-height:54px;resize:vertical;border:1px solid var(--bd);border-radius:var(--r-btn);padding:8px 10px;font-family:var(--f-cn);font-size:13px;color:var(--t1);background:#fff}
+
+
+.pg-inspect .note-input:focus{outline:none;border-color:var(--brand)}
+
+
+
+
+/* 右栏差异 */
+
+
+.pg-inspect .panel-h{font-size:14px;font-weight:600;padding:12px 16px;border-bottom:1px solid var(--bd)}
+
+
+.pg-inspect .diff-grid{display:grid;grid-template-columns:1fr;gap:12px;padding:16px}
+
+
+.pg-inspect .diff-cap{font-size:12px;color:var(--t2);margin-bottom:6px}
+
+
+.pg-inspect .diff-img{position:relative;height:178px;background:var(--bg-sub);border:1px solid var(--bd);border-radius:var(--r-thumb);overflow:hidden}
+
+
+.pg-inspect .diff-img svg{display:block;width:100%;height:100%}
+
+
+.pg-inspect .diff-mask{position:absolute;inset:0;background:var(--diff-mask)}
+
+
+.pg-inspect .diff-mask.orange{background:rgba(217,119,6,0.12)}
+
+
+.pg-inspect .diff-box{position:absolute;right:13%;bottom:12%;width:30%;height:28%;border:2px solid var(--diff);border-radius:2px}
+
+
+.pg-inspect .diff-box.gray{right:auto;bottom:auto;left:16%;top:26%;width:66%;height:24%;border:2px dashed var(--warn);border-radius:2px;transform:rotate(-1.5deg);transform-origin:center}
+
+
+.pg-inspect .diff-tilt-cap{position:absolute;left:16%;top:19%;font-size:11px;font-weight:600;color:var(--warn-tx);background:var(--warn-bg);border:1px solid var(--warn);border-radius:4px;padding:1px 6px}
+
+
+.pg-inspect .loupe{position:absolute;right:8px;bottom:8px;width:96px;height:96px;border:2px solid var(--brand);border-radius:8px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(16,24,40,.18)}
+
+
+.pg-inspect .loupe-img{position:absolute;top:0;left:0}
+
+
+.pg-inspect .loupe-img svg{display:block;width:200px;height:200px}
+
+
+.pg-inspect .loupe-out{position:absolute;left:33px;top:33px;width:30px;height:30px;border:2px solid var(--diff)}
+
+
+.pg-inspect .loupe-out.orange{border-style:dashed;border-color:var(--warn)}
+
+
+.pg-inspect .loupe-tag{position:absolute;left:4px;top:4px;font-size:10px;font-family:var(--f-mono);color:var(--brand);background:rgba(255,255,255,.85);padding:0 4px;border-radius:3px}
+
+
+.pg-inspect .diff-note{margin:0 16px 16px;padding:10px 12px;border-left:3px solid var(--bd-s);border-radius:0 4px 4px 0;background:var(--bg-sub);font-size:13px;color:var(--t2)}
+
+
+.pg-inspect .diff-note.bad{border-left-color:var(--bad);background:var(--bad-bg);color:var(--bad-tx)}
+
+
+.pg-inspect .diff-note.warn{border-left-color:var(--warn);background:var(--warn-bg);color:var(--warn-tx)}
+
+
+.pg-inspect .diff-note.ok{border-left-color:var(--ok);background:var(--ok-bg);color:var(--ok-tx)}
+
+
+
+
+/* 按箱汇总 */
+
+
+.pg-inspect .sum-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--bd)}
+
+
+.pg-inspect .sum-toggle{cursor:pointer;font-size:12px;color:var(--brand);display:flex;align-items:center;gap:4px;user-select:none}
+
+
+.pg-inspect table.box-table{width:100%;border-collapse:collapse;font-size:13px}
+
+
+.pg-inspect .box-table thead th{position:sticky;top:0;background:var(--bg-sub);text-align:left;font-weight:600;color:var(--t2);font-size:12px;padding:10px 16px;border-bottom:1px solid var(--bd)}
+
+
+.pg-inspect .box-table tbody td{padding:10px 16px;border-bottom:1px solid var(--bd-f);color:var(--t1)}
+
+
+.pg-inspect .box-table tbody tr.sum-row{background:var(--bg-sub);font-weight:600}
+
+
+.pg-inspect .box-table tbody tr.sum-row td{border-bottom:none}
+
+
+.pg-inspect .box-table .num{font-family:var(--f-mono)}
+
+
+
+
+/* 徽标 */
+
+
+.pg-inspect .badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:var(--r-badge);font-size:12px;font-weight:600;line-height:1;white-space:nowrap}
+
+
+.pg-inspect .badge .dot{width:6px;height:6px;border-radius:50%;flex:0 0 auto}
+
+
+.pg-inspect .badge.ok{background:var(--ok-bg);color:var(--ok-tx)}
+.pg-inspect .badge.ok .dot{background:var(--ok)}
+
+
+.pg-inspect .badge.bad{background:var(--bad-bg);color:var(--bad-tx)}
+.pg-inspect .badge.bad .dot{background:var(--bad)}
+
+
+.pg-inspect .badge.warn{background:var(--warn-bg);color:var(--warn-tx)}
+.pg-inspect .badge.warn .dot{background:var(--warn)}
+
+
+.pg-inspect .badge.info{background:var(--info-bg);color:var(--info-tx)}
+.pg-inspect .badge.info .dot{background:var(--info)}
+
+
+.pg-inspect .badge.na{background:var(--na-bg);color:var(--na-tx)}
+.pg-inspect .badge.na .dot{background:var(--na)}
+
+
+.pg-inspect .badge.big{height:26px;font-size:13px;padding:0 12px}
+
+
+
+
+/* 按钮 */
+
+
+.pg-inspect .btn{height:36px;padding:0 16px;border-radius:var(--r-btn);font-size:14px;font-weight:600;font-family:var(--f-cn);cursor:pointer;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:background .15s,border-color .15s,color .15s}
+
+
+.pg-inspect .btn-sm{height:30px;padding:0 12px;font-size:13px}
+
+
+.pg-inspect .btn-primary{background:var(--brand);color:#fff}
+
+
+.pg-inspect .btn-primary:hover{background:var(--brand-h)}
+
+
+.pg-inspect .btn-primary:active{background:var(--brand-a)}
+
+
+.pg-inspect .btn-secondary{background:#fff;color:var(--t1);border-color:var(--bd-s)}
+
+
+.pg-inspect .btn-secondary:hover{border-color:var(--brand);color:var(--brand)}
+
+
+.pg-inspect .btn-danger{background:var(--bad);color:#fff}
+
+
+.pg-inspect .btn-danger:hover{background:#b91c1c}
+
+
+.pg-inspect .btn-warn{background:var(--warn);color:#fff}
+
+
+.pg-inspect .btn-warn:hover{background:#b45309}
+
+
+.pg-inspect .btn-ghost{background:#fff;color:var(--t2);border-color:var(--bd)}
+
+
+.pg-inspect :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+
+
+.pg-inspect .nav-item:focus-visible{background:var(--bg-sub)}
+
+
+.pg-inspect .upload-drop:focus-visible{border-color:var(--brand);background:var(--brand-l)}
+
+
+
+
+/* 交付说明 */
+
+
+.pg-inspect .proto-note{font-size:11px;color:var(--t2);text-align:center;padding:4px 0 8px;line-height:1.5}
+
+
+
+
+@media(max-width:1080px){
+
+ 
+ 
+.pg-inspect .layout{flex-direction:column}
+
+
+ 
+ 
+.pg-inspect .col-left, .pg-inspect .col-right{flex:1 1 auto;width:100%}
+
+}
+
+
+/* ===== 页面 2 · 流程图页（作用域 .pg-flow） ===== */
+
+
+ 
+ 
+
+
+ 
+ 
+*{box-sizing:border-box;margin:0;padding:0}
+
+
+ 
+ 
+
+
+ 
+ 
+.pg-flow .crumbs{font-size:12px;color:var(--text2);padding:16px 24px 0}
+
+
+ 
+ 
+.pg-flow .crumbs .sep{color:var(--text-dis);margin:0 6px}
+
+
+ 
+ 
+.pg-flow h1.h1{font-size:20px;font-weight:600;padding:8px 24px 0}
+
+
+ 
+ 
+.pg-flow .sub{font-size:13px;color:var(--text2);padding:6px 24px 0;max-width:1100px}
+
+
+ 
+ 
+.pg-flow .tabs{display:flex;gap:8px;padding:16px 24px 0;flex-wrap:wrap}
+
+
+ 
+ 
+.pg-flow .tab{font-size:13px;font-weight:600;color:var(--text2);background:var(--surface);border:1px solid var(--border);border-bottom:none;
+       padding:9px 16px;border-radius:var(--radius-sm) var(--radius-sm) 0 0;cursor:pointer}
+
+
+ 
+ 
+.pg-flow .tab:hover{color:var(--text)}
+
+
+ 
+ 
+.pg-flow .tab.active{color:var(--brand);background:var(--brand-subtle);border-color:var(--border)}
+
+
+ 
+ 
+.pg-flow .panel{border-top:1px solid var(--border);padding:24px;display:none}
+
+
+ 
+ 
+.pg-flow .panel.active{display:block}
+
+
+ 
+ 
+.pg-flow .panel-h2{font-size:16px;font-weight:600;margin-bottom:4px}
+
+
+ 
+ 
+.pg-flow .panel-desc{font-size:13px;color:var(--text2);margin-bottom:18px}
+
+
+
+
+ 
+ 
+/* 流程图容器 */
+
+
+ 
+ 
+.pg-flow .flow{max-width:1080px}
+
+
+ 
+ 
+.pg-flow .step{display:flex;flex-direction:column;align-items:center}
+
+
+ 
+ 
+.pg-flow .connector{width:2px;height:22px;background:var(--border-strong);position:relative}
+
+
+ 
+ 
+.pg-flow .connector::after{content:"";position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+       border:6px solid transparent;border-top-color:var(--border-strong)}
+
+
+
+
+ 
+ 
+.pg-flow .node{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+        padding:11px 16px;min-width:200px;max-width:420px;text-align:center;box-shadow:0 1px 2px rgba(16,24,40,.04)}
+
+
+ 
+ 
+.pg-flow .node .t{font-size:14px;font-weight:600;color:var(--text)}
+
+
+ 
+ 
+.pg-flow .node .d{font-size:12px;color:var(--text2);margin-top:3px}
+
+
+ 
+ 
+.pg-flow .node.start, .pg-flow .node.end{background:var(--brand);border-color:var(--brand);color:#fff}
+
+
+ 
+ 
+.pg-flow .node.start .t, .pg-flow .node.end .t{color:#fff}
+
+
+ 
+ 
+.pg-flow .node.start .d, .pg-flow .node.end .d{color:rgba(255,255,255,.85)}
+
+
+ 
+ 
+.pg-flow .node.dec{border-color:var(--brand);border-width:1.5px}
+
+
+ 
+ 
+.pg-flow .node.dec .t{color:var(--brand)}
+
+
+ 
+ 
+.pg-flow .node.ok{border-color:var(--ok);background:var(--ok-bg)}
+
+
+ 
+ 
+.pg-flow .node.ok .t{color:#166534}
+
+
+ 
+ 
+.pg-flow .node.bad{border-color:var(--bad);background:var(--bad-bg)}
+
+
+ 
+ 
+.pg-flow .node.bad .t{color:#B91C1C}
+
+
+ 
+ 
+.pg-flow .node.warn{border-color:var(--warn);background:var(--warn-bg)}
+
+
+ 
+ 
+.pg-flow .node.warn .t{color:#92400E}
+
+
+ 
+ 
+.pg-flow .node.info{border-color:var(--info);background:var(--info-bg)}
+
+
+ 
+ 
+.pg-flow .node.info .t{color:#1D4ED8}
+
+
+ 
+ 
+.pg-flow .node.small{min-width:auto;padding:8px 12px;font-size:13px}
+
+
+
+
+ 
+ 
+.pg-flow .branch-row{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap;margin-top:2px}
+
+
+ 
+ 
+.pg-flow .branch{display:flex;flex-direction:column;align-items:center;width:200px}
+
+
+ 
+ 
+.pg-flow .branch .lab{font-size:12px;font-weight:600;margin-bottom:8px;padding:3px 10px;border-radius:4px}
+
+
+ 
+ 
+.pg-flow .lab.ok{color:#166534;background:var(--ok-bg)}
+
+
+ 
+ 
+.pg-flow .lab.bad{color:#B91C1C;background:var(--bad-bg)}
+
+
+ 
+ 
+.pg-flow .lab.warn{color:#92400E;background:var(--warn-bg)}
+
+
+ 
+ 
+.pg-flow .lab.info{color:#1D4ED8;background:var(--info-bg)}
+
+
+ 
+ 
+.pg-flow .branch .connector{height:16px}
+
+
+
+
+ 
+ 
+.pg-flow .parallel{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;padding:6px 0}
+
+
+ 
+ 
+.pg-flow .loop-box{border:1.5px dashed var(--border-strong);border-radius:var(--radius);padding:14px 18px;margin:6px 0;background:var(--surface-subtle)}
+
+
+ 
+ 
+.pg-flow .loop-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;text-align:center;letter-spacing:1px}
+
+
+ 
+ 
+.pg-flow .loop-inner{display:flex;flex-direction:column;align-items:center}
+
+
+ 
+ 
+.pg-flow .arrow-side{font-size:12px;color:var(--text-dis);margin:2px 0}
+
+
+
+
+ 
+ 
+.pg-flow .legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;padding-top:16px;border-top:1px solid var(--divider)}
+
+
+ 
+ 
+.pg-flow .legend .item{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2)}
+
+
+ 
+ 
+.pg-flow .sw{width:14px;height:14px;border-radius:3px;border:1px solid var(--border)}
+
+
+ 
+ 
+.pg-flow .sw.start{background:var(--brand)}
+ 
+.pg-flow .sw.dec{background:#fff;border-color:var(--brand)}
+
+
+ 
+ 
+.pg-flow .sw.ok{background:var(--ok-bg);border-color:var(--ok)}
+ 
+.pg-flow .sw.bad{background:var(--bad-bg);border-color:var(--bad)}
+
+
+ 
+ 
+.pg-flow .sw.warn{background:var(--warn-bg);border-color:var(--warn)}
+ 
+.pg-flow .sw.proc{background:#fff;border-color:var(--border)}
+
+
+
+
+ 
+ 
+.pg-flow .proto-note{font-size:11px;color:var(--text-dis);padding:18px 24px 28px;max-width:1080px}
+
+
+ 
+ 
+@media(max-width:760px){.pg-flow .branch{width:auto}}
+
+
+/* 需求标注闪点：比对结果容器允许红徽标浮出，不被原 overflow 裁剪 */
+.pg-inspect .cmp-list{overflow:visible}
+</style>
+</head>
+<body>
+<nav class="app-shell" aria-label="项目页面切换">
+  <span class="app-brand"><i class="app-brand-mark"></i>QMS 外包装图像识别 <span class="app-brand-sub">· 原型项目</span></span>
+  <button class="page-tab active" data-target="page-inspect" type="button">抽检比对执行页</button>
+  <button class="page-tab" data-target="page-flow" type="button">流程图页</button>
+</nav>
+<div id="page-inspect" class="page-panel pg-inspect active">
+
+<div class="app">
+
+  <!-- 顶部区 -->
+  <header class="card topbar">
+    <nav class="crumbs" aria-label="面包屑导航">
+      <span>主页</span><span class="sep">/</span>
+      <span>检验任务单</span><span class="sep">/</span>
+      <h1 class="h1 crumb-h1">外包装图像识别-第1次检验</h1>
+    </nav>
+    <div class="topbar-right">
+      <span class="order-no mono">WO-2026-1012-037</span>
+      <button class="btn btn-secondary">暂停检验</button>
+      <span class="badge info"><span class="dot"></span>检验进行中</span>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <nav class="card tabs">
+    <div class="tab active">外箱内盒包装</div>
+    <div class="tab">产品内包装明细</div>
+    <div class="tab">检验标准</div>
+    <div class="tab">功能测试</div>
+    <div class="tab">异常履历</div>
+    <div class="tab">特殊检验项</div>
+    <div class="tab">ECN变更消息</div>
+    <div class="tab">出货图片</div>
+    <div class="tab">不良图片</div>
+  </nav>
+
+  <!-- 全局汇总条 -->
+  <section class="card summary-bar">
+    <div class="sum-item"><span class="k">抽中箱数</span><span class="v" id="sumBoxes">3</span></div>
+    <div class="sum-sep"></div>
+    <div class="sum-item"><span class="k">已判定项</span><span class="v" id="sumJudged">5/7</span></div>
+    <div class="sum-sep"></div>
+    <div class="sum-item"><span class="k">通过率</span><span class="v" id="sumRate">60%</span></div>
+    <div class="sum-sep"></div>
+    <div class="sum-item" style="flex:1 1 auto">
+      <span class="k">三态分布</span>
+      <div class="sum-dist" id="sumDist"></div>
+    </div>
+  </section>
+
+  <!-- 三栏主体 -->
+  <main class="layout">
+    <!-- 左栏 -->
+    <aside class="card col-left">
+      <div class="nav-box-h" style="border-radius:var(--r-card) var(--r-card) 0 0">箱号 · 检验项</div>
+      <div id="navList"></div>
+    </aside>
+
+    <!-- 中栏 -->
+    <section class="col-mid">
+      <div class="card card-pad detail-card">
+        <div class="detail-head">
+          <div>
+            <h2 class="h2" id="dTitle"></h2>
+            <p class="d-desc" id="dDesc"></p>
+          </div>
+          <div class="detail-meta">
+            <div class="muted">标准版本</div>
+            <span class="mono" id="dStd"></span>
+            <div class="muted" id="dMeta"></div>
+          </div>
+        </div>
+
+        <h3 class="h3 mt">实拍图上传</h3>
+        <div class="upload">
+          <div class="upload-drop" id="uploadDrop">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#97A0AD" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="上传图片">
+              <path d="M12 16V4M12 4l-4 4M12 4l4 4"/>
+              <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>
+            </svg>
+            <div class="u-main">点击选择实拍图，或拖拽图片到此处</div>
+            <div class="u-sub">支持 JPG / PNG，单张 ≤ 10MB</div>
+          </div>
+          <div class="gate-demo">
+            <button class="btn btn-secondary btn-sm" id="simOk">模拟达标图</button>
+            <button class="btn btn-secondary btn-sm" id="simBad">模拟重拍图</button>
+          </div>
+          <div class="gate-feedback" id="gateFeedback"></div>
+        </div>
+
+        <h3 class="h3 mt">结构化比对结果</h3>
+        <div class="cmp-list">
+          <div class="cmp-row head"><div>分项</div><div>状态</div><div>得分</div><div>说明</div></div>
+          <div id="cmpList"></div>
+        </div>
+
+        <h3 class="h3 mt">三态判定</h3>
+        <div class="verdict">
+          <div class="verdict-top">
+            <span id="verdictBadgeWrap"></span>
+            <span class="verdict-text" id="verdictText"></span>
+          </div>
+          <div class="verdict-actions" id="verdictActions">
+            <button class="btn btn-primary" data-act="pass">确认通过</button>
+            <button class="btn btn-danger" data-act="fail">标记不通过</button>
+            <button class="btn btn-warn" data-act="review">转人工复核</button>
+            <button class="btn btn-ghost" data-act="na">判 NA</button>
+          </div>
+          <div class="note-field">
+            <label class="note-label">检验备注</label>
+            <textarea class="note-input" placeholder="填写判定依据或异常说明…"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右栏 -->
+    <aside class="col-right">
+      <div class="card diff-card">
+        <div class="panel-h">差异对比</div>
+        <div class="diff-grid">
+          <div class="diff-cell">
+            <div class="diff-cap">实拍图（AI 识别）</div>
+            <div class="diff-img" id="diffReal"></div>
+          </div>
+          <div class="diff-cell">
+            <div class="diff-cap">标准图</div>
+            <div class="diff-img" id="diffStd"></div>
+          </div>
+        </div>
+        <div class="diff-note" id="diffNote"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- 按箱汇总 -->
+  <section class="card">
+    <div class="sum-head">
+      <span class="h3" style="font-weight:600">按箱汇总</span>
+      <span class="sum-toggle" id="sumToggle">收起 ▾</span>
+    </div>
+    <div id="sumBody">
+      <table class="box-table">
+        <thead>
+          <tr><th>箱号</th><th>检验项数</th><th>通过</th><th>不通过</th><th>待复核</th><th>箱结论</th></tr>
+        </thead>
+        <tbody id="boxSumBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="proto-note">交付说明：本原型为前端演示，数据均为模拟；所有图像以 SVG / CSS 示意，零外部资源依赖，可直接在浏览器打开。正式实现以 PRD（QMS-外包装图像识别判定-PRD-构思-v0.1）为准。</footer>
+</div>
+
+
+
+</div>
+<div id="page-flow" class="page-panel pg-flow">
+
+  <div class="crumbs">主页 <span class="sep">/</span> QMS 外包装图像识别 <span class="sep">/</span> 流程图</div>
+  <h1 class="h1">外包装图像识别辅助判定 · 流程图</h1>
+  <p class="sub">四张流程示意图，覆盖算法处理、抽检比对执行、标准图建库与模块整体闭环。配色沿用 QMS 蓝与三态状态色（通过绿 / 不通过红 / 待复核橙）。</p>
+
+  <div class="tabs">
+    <div class="tab active" data-target="f1">① 算法处理流程</div>
+    <div class="tab" data-target="f2">② 抽检比对主流程</div>
+    <div class="tab" data-target="f3">③ 标准图建库流程</div>
+    <div class="tab" data-target="f4">④ 模块整体总览</div>
+  </div>
+
+  <!-- ① 算法处理流程 -->
+  <section class="panel active" id="f1">
+    <div class="panel-h2">① 算法处理流程（单张实拍图的判定链路）</div>
+    <div class="panel-desc">从上传实拍图到输出三态结论。核心：先质量门控、再几何对齐，之后分项并行检测，最后按阈值融合判定。</div>
+    <div class="flow">
+      <div class="step">
+        <div class="node start"><div class="t">实拍图输入</div><div class="d">检验员拍照 / 上传</div></div>
+      </div>
+      <div class="connector"></div>
+      <div class="step">
+        <div class="node info"><div class="t">质量门控</div><div class="d">模糊 / 过曝欠曝 / 角度偏斜 / 反光遮挡</div></div>
+      </div>
+      <div class="connector"></div>
+      <div class="step">
+        <div class="node dec"><div class="t">达标？</div><div class="d">是 → 进入比对；否 → 阻断要求重拍</div></div>
+      </div>
+
+      <div class="branch-row">
+        <div class="branch">
+          <div class="lab bad">不达标</div>
+          <div class="connector"></div>
+          <div class="node bad small"><div class="t">提示重拍并说明原因</div></div>
+        </div>
+        <div class="branch">
+          <div class="lab ok">达标</div>
+          <div class="connector"></div>
+          <div class="node"><div class="t">几何对齐</div><div class="d">特征点配准 + 单应变换，把图"掰正"到基准坐标系</div></div>
+        </div>
+      </div>
+
+      <div class="connector"></div>
+      <div class="step">
+        <div class="node dec"><div class="t">分项检测（并行）</div><div class="d">对齐后逐项查，互不依赖</div></div>
+      </div>
+      <div class="parallel">
+        <div class="node small"><div class="t">文字 OCR</div><div class="d">识别型号/规格/批次/认证，与基准字段比对</div></div>
+        <div class="node small"><div class="t">条码 / 二维码</div><div class="d">解码内容比对 + 可扫性评估</div></div>
+        <div class="node small"><div class="t">图案 / Logo</div><div class="d">embedding 相似度 + 位置对齐比对</div></div>
+        <div class="node small"><div class="t">版面</div><div class="d">SSIM / 分区差异，查缺失错位多印</div></div>
+        <div class="node small"><div class="t">物理状态</div><div class="d">无监督异常检测 PatchCore / EfficientAD</div></div>
+      </div>
+      <div class="connector"></div>
+      <div class="step">
+        <div class="node"><div class="t">各分项得分聚合</div><div class="d">文字/条码/图案/版面/物理 五维得分</div></div>
+      </div>
+      <div class="connector"></div>
+      <div class="step">
+        <div class="node dec"><div class="t">融合判定（阈值）</div><div class="d">≥ 通过线 / 区间=灰区 / &lt; 不通过线</div></div>
+      </div>
+
+      <div class="branch-row">
+        <div class="branch">
+          <div class="lab ok">通过</div>
+          <div class="connector"></div>
+          <div class="node ok small"><div class="t">输出：通过 + 无差异</div></div>
+        </div>
+        <div class="branch">
+          <div class="lab warn">待复核（灰区）</div>
+          <div class="connector"></div>
+          <div class="node warn small"><div class="t">输出：灰区 + 转人工确认</div></div>
+        </div>
+        <div class="branch">
+          <div class="lab bad">不通过</div>
+          <div class="connector"></div>
+          <div class="node bad small"><div class="t">输出：不通过 + 红框差异区</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="item"><span class="sw start"></span>起止</div>
+      <div class="item"><span class="sw proc"></span>处理</div>
+      <div class="item"><span class="sw dec"></span>判定 / 分支</div>
+      <div class="item"><span class="sw ok"></span>通过</div>
+      <div class="item"><span class="sw warn"></span>待复核</div>
+      <div class="item"><span class="sw bad"></span>不通过 / 阻断</div>
+    </div>
+  </section>
+
+  <!-- ② 抽检比对主流程 -->
+  <section class="panel" id="f2">
+    <div class="panel-h2">② 抽检比对主流程（检验员现场作业链路）</div>
+    <div class="panel-desc">在现有检验任务单"开始检验"后、人工三态点选前插入识别环节；抽箱数由抽箱标准表决定，逐箱逐检验项出判定。</div>
+    <div class="flow">
+      <div class="step"><div class="node start"><div class="t">开始检验</div><div class="d">进入外检任务单</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">按抽箱标准算抽箱数</div><div class="d">1-3 全数 / 4-8 抽3 / 9-25 抽5 / 26+ 抽8</div></div></div>
+      <div class="connector"></div>
+
+      <div class="loop-box">
+        <div class="loop-title">▼ 逐箱循环</div>
+        <div class="loop-inner">
+          <div class="step"><div class="node small"><div class="t">选箱</div></div></div>
+          <div class="connector"></div>
+          <div class="loop-box">
+            <div class="loop-title">▼ 逐检验项循环</div>
+            <div class="loop-inner">
+              <div class="step"><div class="node small"><div class="t">拍照 / 上传实拍图</div></div></div>
+              <div class="connector"></div>
+              <div class="step"><div class="node small"><div class="t">质量门控</div><div class="d">不达标→重拍</div></div></div>
+              <div class="connector"></div>
+              <div class="step"><div class="node small"><div class="t">调用算法比对（见图①）</div></div></div>
+              <div class="connector"></div>
+              <div class="step"><div class="node small"><div class="t">三态判定</div><div class="d">AI 建议 + 差异可视化</div></div></div>
+              <div class="connector"></div>
+              <div class="step"><div class="node small"><div class="t">人工确认 / 覆盖（留痕）</div></div></div>
+            </div>
+          </div>
+          <div class="connector"></div>
+          <div class="step"><div class="node info small"><div class="t">按箱汇总：一箱全过 = 箱过</div></div></div>
+        </div>
+      </div>
+
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">任务单汇总</div><div class="d">三态分布 / 通过率 / 不良归类</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">回写检验任务单</div><div class="d">写入现有「检验结果」三态字段，保留 AI 建议与人工结论</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node end"><div class="t">提交放行</div><div class="d">主管复核 → 锁定</div></div></div>
+    </div>
+    <div class="legend">
+      <div class="item"><span class="sw start"></span>起点</div>
+      <div class="item"><span class="sw proc"></span>作业步骤</div>
+      <div class="item"><span class="sw info"></span>汇总 / 回写</div>
+      <div class="item"><span class="sw end"></span>终点</div>
+      <div class="item">虚线框 = 循环（逐箱 / 逐检验项）</div>
+    </div>
+  </section>
+
+  <!-- ③ 标准图建库流程 -->
+  <section class="panel" id="f3">
+    <div class="panel-h2">③ 标准图建库流程（品质工程师维护基准）</div>
+    <div class="panel-desc">标准图是算法比对的"正常基准"。只有正常样本、无缺陷库，故基准质量直接决定准确率；版本管理保证判定可追溯。</div>
+    <div class="flow">
+      <div class="step"><div class="node start"><div class="t">选检验项</div><div class="d">在外检标准详情页定位</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">上传多张标准图</div><div class="d">对应 A / B / C 级面、多角度、多版本</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node info"><div class="t">自动生成基准特征</div><div class="d">异常检测模型学习"正常长什么样"</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">标注 面 / 角度 / 版本说明</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">提交</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">修订日志 + 评审记录</div><div class="d">沿用现有标准维护审批流</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node dec"><div class="t">主管审批</div></div></div>
+
+      <div class="branch-row">
+        <div class="branch">
+          <div class="lab bad">驳回</div>
+          <div class="connector"></div>
+          <div class="node bad small"><div class="t">退回标注，修正后重提</div></div>
+        </div>
+        <div class="branch">
+          <div class="lab ok">通过</div>
+          <div class="connector"></div>
+          <div class="node ok"><div class="t">版本生效（带生效日期）</div><div class="d">生成新版本号 + 生效时间</div></div>
+        </div>
+      </div>
+      <div class="connector"></div>
+      <div class="step"><div class="node warn"><div class="t">版本绑定</div><div class="d">在途任务绑旧版；新判定绑新版（不可变）</div></div></div>
+    </div>
+    <div class="legend">
+      <div class="item"><span class="sw start"></span>起点</div>
+      <div class="item"><span class="sw proc"></span>处理</div>
+      <div class="item"><span class="sw info"></span>模型 / 系统动作</div>
+      <div class="item"><span class="sw dec"></span>判定 / 审批</div>
+      <div class="item"><span class="sw ok"></span>生效</div>
+      <div class="item"><span class="sw warn"></span>追溯约束</div>
+    </div>
+  </section>
+
+  <!-- ④ 模块整体总览 -->
+  <section class="panel" id="f4">
+    <div class="panel-h2">④ 模块整体总览（建库 → 抽检 → 判定 → 回写 → 审计 → 优化 闭环）</div>
+    <div class="panel-desc">两条主线（建库、抽检）汇入三态判定，结果回写任务单并沉淀不良与日志，统计看板反哺模型与阈值优化，形成持续调准闭环。</div>
+    <div class="flow">
+      <div class="step"><div class="node start"><div class="t">标准图库</div><div class="d">工程师维护 · 版本审批 · 基准特征</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">抽检比对</div><div class="d">检验员现场执行（见图②）</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node dec"><div class="t">三态判定</div><div class="d">AI 辅助 + 人工确认 / 覆盖</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">回写检验任务单</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node info"><div class="t">不良图沉淀 + 识别日志审计</div><div class="d">差异证据留痕、全链路可追溯</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node"><div class="t">统计看板</div><div class="d">误判率 / 复核率 / 不良类型分布 / 节省工时</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node warn"><div class="t">反馈回流</div><div class="d">人工覆盖数据 → 调阈值 / 优化模型</div></div></div>
+      <div class="connector"></div>
+      <div class="step"><div class="node end"><div class="t">闭环：回到抽检比对持续调准</div></div></div>
+    </div>
+    <div class="legend">
+      <div class="item"><span class="sw start"></span>基准</div>
+      <div class="item"><span class="sw proc"></span>作业 / 沉淀</div>
+      <div class="item"><span class="sw dec"></span>判定</div>
+      <div class="item"><span class="sw info"></span>审计 / 统计</div>
+      <div class="item"><span class="sw warn"></span>优化</div>
+      <div class="item"><span class="sw end"></span>闭环</div>
+    </div>
+  </section>
+
+  <div class="proto-note">流程图为依据《QMS 外包装图像识别判定-PRD-构思-v0.1.md》绘制的演示示意图，零外部依赖、可直接浏览器打开；算法与业务逻辑以 PRD 为准。</div>
+
+  
+
+</div>
+<script>
+
+/* 项目级：两页切换 */
+(function(){
+  var tabs=document.querySelectorAll('.app-shell .page-tab');
+  var panels=document.querySelectorAll('.page-panel');
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){
+      tabs.forEach(function(x){x.classList.remove('active')});
+      panels.forEach(function(p){p.classList.remove('active')});
+      t.classList.add('active');
+      document.getElementById(t.dataset.target).classList.add('active');
+      window.scrollTo(0,0);
+    });
+  });
+})();
+
+</script>
+<script>
+/* 页面 1 原生交互 */
+
+/* ============ 数据模型（7 项，覆盖三态 + 待判定） ============ */
+const ITEMS = [
+  { id:'i1', box:'箱1', name:'外箱印刷',
+    desc:'核对承运外箱丝印型号、批次号、Logo 与标准图一致性，识别印刷偏移 / 重影。',
+    stdVer:'v2.1 · 生效2026-10-18', operator:'张检验', time:'2026-10-21 14:32',
+    compare:[
+      {label:'文字OCR', status:'pass',  score:'98%',   note:"型号'ME-2026-A1'比对一致"},
+      {label:'条码二维码', status:'pass', score:'100%', note:'条码解码成功，内容一致'},
+      {label:'图案Logo', status:'fail',  score:'异常', note:'右下角 Logo 偏移 2mm，超出容差'},
+      {label:'版面',     status:'pass',  score:'96%',   note:'版面布局整体一致'},
+      {label:'物理状态', status:'fail',  score:'异常', note:'侧封处发现 1 处压痕'}
+    ],
+    judgment:'fail', conclusion:'图案 Logo 偏移且外箱存在压痕，判定不通过。',
+    diff:{hasDiff:true, gray:false, desc:'外箱右下角 Logo 印刷偏移 2mm，超出容差；侧封处发现压痕。'} },
+
+  { id:'i2', box:'箱1', name:'封箱胶带',
+    desc:'核对封箱胶带宽度、印刷字样与粘贴平整度。',
+    stdVer:'v1.5 · 生效2026-08-11', operator:'张检验', time:'2026-10-21 14:38',
+    compare:[
+      {label:'文字OCR', status:'pass', score:'99%',  note:'胶带字样比对一致'},
+      {label:'条码二维码', status:'na',  score:'NA',  note:'本项无条码'},
+      {label:'图案Logo', status:'pass', score:'98%',  note:'Logo 居中无偏移'},
+      {label:'版面',     status:'pass', score:'97%',  note:'粘贴平整无褶皱'},
+      {label:'物理状态', status:'pass', score:'100%', note:'无破损、无脱落'}
+    ],
+    judgment:'pass', conclusion:'各项比对一致，判定通过。',
+    diff:{hasDiff:false, gray:false, desc:'未发现显著差异。'} },
+
+  { id:'i3', box:'箱2', name:'内盒印刷',
+    desc:'核对内盒说明文字、配色与 Logo 位置。',
+    stdVer:'v1.8 · 生效2026-09-02', operator:'张检验', time:'2026-10-21 14:40',
+    compare:[
+      {label:'文字OCR', status:'pass', score:'99%',  note:'说明文字比对一致'},
+      {label:'条码二维码', status:'na',  score:'NA',  note:'本项无条码'},
+      {label:'图案Logo', status:'pass', score:'98%',  note:'Logo 位置一致'},
+      {label:'版面',     status:'pass', score:'97%',  note:'版面布局一致'},
+      {label:'物理状态', status:'pass', score:'100%', note:'无破损、无压痕'}
+    ],
+    judgment:'pass', conclusion:'各项比对一致，判定通过。',
+    diff:{hasDiff:false, gray:false, desc:'未发现显著差异。'} },
+
+  { id:'i4', box:'箱2', name:'标签条码',
+    desc:'核对内盒标签条码内容与可读性。',
+    stdVer:'v2.0 · 生效2026-10-01', operator:'张检验', time:'2026-10-21 14:46',
+    compare:[
+      {label:'文字OCR', status:'pass', score:'98%',  note:'标签文字清晰，比对一致'},
+      {label:'条码二维码', status:'pass', score:'100%', note:'条码解码成功，内容一致'},
+      {label:'图案Logo', status:'pass', score:'98%',  note:'Logo 一致'},
+      {label:'版面',     status:'pass', score:'97%',  note:'版面布局一致'},
+      {label:'物理状态', status:'pass', score:'100%', note:'无破损、无褶皱'}
+    ],
+    judgment:'pass', conclusion:'各项比对一致，判定通过。',
+    diff:{hasDiff:false, gray:false, desc:'未发现显著差异。'} },
+
+  { id:'i5', box:'箱3', name:'标签条码',
+    desc:'核对外箱标签条码内容与可读性。',
+    stdVer:'v2.0 · 生效2026-10-01', operator:'张检验', time:'2026-10-21 14:55',
+    compare:[
+      {label:'文字OCR', status:'pass',   score:'95%',  note:'文字清晰，比对一致'},
+      {label:'条码二维码', status:'pass', score:'100%', note:'条码解码成功，内容一致'},
+      {label:'图案Logo', status:'pass',   score:'97%',  note:'Logo 一致'},
+      {label:'版面',     status:'review', score:'异常', note:'标签存在轻微倾斜疑似（约 1.5°）'},
+      {label:'物理状态', status:'pass',   score:'99%',  note:'无破损'}
+    ],
+    judgment:'review', conclusion:'标签版面存在轻微疑似倾斜，建议人工复核。',
+    diff:{hasDiff:false, gray:true, desc:'标签轻微倾斜，疑似需人工确认'} },
+
+  { id:'i6', box:'箱3', name:'内盒印刷',
+    desc:'核对内盒印刷内容、色彩与位置。',
+    stdVer:'v1.8 · 生效2026-09-02', operator:'—', time:'—',
+    compare:[
+      {label:'文字OCR', status:'na', score:'—', note:'待上传实拍图'},
+      {label:'条码二维码', status:'na', score:'—', note:'待上传实拍图'},
+      {label:'图案Logo', status:'na', score:'—', note:'待上传实拍图'},
+      {label:'版面',     status:'na', score:'—', note:'待上传实拍图'},
+      {label:'物理状态', status:'na', score:'—', note:'待上传实拍图'}
+    ],
+    judgment:'pending', conclusion:'尚未开始比对，请上传实拍图。',
+    diff:{hasDiff:false, gray:false, desc:'待上传实拍图。'} },
+
+  { id:'i7', box:'箱1', name:'标签条码',
+    desc:'核对外箱标签条码内容与可读性。',
+    stdVer:'v2.0 · 生效2026-10-01', operator:'—', time:'—',
+    compare:[
+      {label:'文字OCR', status:'na', score:'—', note:'待上传实拍图'},
+      {label:'条码二维码', status:'na', score:'—', note:'待上传实拍图'},
+      {label:'图案Logo', status:'na', score:'—', note:'待上传实拍图'},
+      {label:'版面',     status:'na', score:'—', note:'待上传实拍图'},
+      {label:'物理状态', status:'na', score:'—', note:'待上传实拍图'}
+    ],
+    judgment:'pending', conclusion:'尚未开始比对，请上传实拍图。',
+    diff:{hasDiff:false, gray:false, desc:'待上传实拍图。'} }
+];
+
+const META = {
+  pass:   {cls:'ok',   label:'通过'},
+  fail:   {cls:'bad',  label:'不通过'},
+  review: {cls:'warn', label:'待人工复核'},
+  na:     {cls:'na',   label:'不适用'},
+  pending:{cls:'info', label:'待判定'}
+};
+
+let currentId = 'i1'; // 默认展示「不通过」典型项
+const el = id => document.getElementById(id);
+const getItem = id => ITEMS.find(i => i.id === id);
+const badge = (s, big) => { const m=META[s]; return `<span class="badge ${m.cls}${big?' big':''}"><span class="dot"></span>${m.label}</span>`; };
+
+/* ============ 包装盒 SVG（纯示意） ============ */
+function boxSVG(variant){
+  const lc = variant==='fail' ? {x:160,y:170} : {x:150,y:168};
+  const skew = variant==='review' ? 'transform="rotate(-1.5 100 86)"' : '';
+  return `<svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet" role="img" aria-label="包装盒印刷示意">
+    <rect x="14" y="24" width="172" height="150" rx="4" fill="#E9EBEF" stroke="#CBD2DC" stroke-width="1.5"/>
+    <line x1="14" y1="44" x2="186" y2="44" stroke="#CBD2DC" stroke-width="1"/>
+    <line x1="100" y1="44" x2="100" y2="174" stroke="#DDE1E7" stroke-width="1"/>
+    <g ${skew}>
+      <rect x="34" y="58" width="132" height="48" rx="3" fill="#FFFFFF" stroke="#E3E6EB"/>
+      <rect x="42" y="66" width="70" height="6" rx="1" fill="#5B6675"/>
+      <rect x="42" y="78" width="100" height="5" rx="1" fill="#97A0AD"/>
+      <rect x="42" y="88" width="86" height="5" rx="1" fill="#97A0AD"/>
+    </g>
+    <circle cx="${lc.x}" cy="${lc.y}" r="11" fill="#2D5BD7"/>
+    <circle cx="${lc.x}" cy="${lc.y}" r="5" fill="#FFFFFF"/>
+    <g fill="#1F2733">
+      <rect x="30" y="150" width="2" height="18"/><rect x="34" y="150" width="1" height="18"/>
+      <rect x="38" y="150" width="3" height="18"/><rect x="43" y="150" width="1" height="18"/>
+      <rect x="47" y="150" width="2" height="18"/><rect x="52" y="150" width="2" height="18"/>
+      <rect x="56" y="150" width="1" height="18"/><rect x="60" y="150" width="3" height="18"/>
+    </g>
+    <text x="170" y="120" font-family="monospace" font-size="9" fill="#5B6675" text-anchor="end">ME-2026-A1</text>
+  </svg>`;
+}
+function diffOverlay(diff){
+  if(diff.hasDiff) return `<div class="diff-mask"></div><div class="diff-box"></div>`;
+  if(diff.gray)    return `<div class="diff-mask orange"></div><div class="diff-box gray"></div><div class="diff-tilt-cap">标签倾斜 1.5°</div>`;
+  return '';
+}
+function loupeHTML(variant, diff){
+  const focus = diff.hasDiff ? {x:160,y:170} : (diff.gray ? {x:100,y:82} : {x:150,y:168});
+  const scale=2.4, L=96, c=L/2;
+  const tx = c - focus.x*scale, ty = c - focus.y*scale;
+  let out = diff.hasDiff ? '<div class="loupe-out"></div>' : (diff.gray ? '<div class="loupe-out orange"></div>' : '');
+  return `<div class="loupe"><div class="loupe-img" style="transform:translate(${tx}px,${ty}px) scale(${scale})">${boxSVG(variant)}</div>${out}<span class="loupe-tag">2.4×</span></div>`;
+}
+
+/* ============ 渲染 ============ */
+function renderNav(){
+  const boxes = ['箱1','箱2','箱3'];
+  let html='';
+  boxes.forEach(box=>{
+    const items = ITEMS.filter(i=>i.box===box);
+    html += `<div class="nav-box"><div class="nav-box-h"><span>${box}</span><span class="nav-box-sub">${items.length} 项</span></div>`;
+    items.forEach(it=>{
+      const m=META[it.judgment];
+      const active = it.id===currentId ? ' active':'';
+      html += `<div class="nav-item${active}" data-id="${it.id}">
+        <span class="navdot ${m.cls}"></span>
+        <span class="nav-item-name">${it.name}</span>
+        <span class="nav-item-tag">${m.label}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  el('navList').innerHTML = html;
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    n.onclick = ()=>{ currentId = n.dataset.id; showGate('ok'); renderAll(); };
+  });
+}
+
+function renderDetail(){
+  const it = getItem(currentId);
+  el('dTitle').textContent = `${it.box} · ${it.name}`;
+  el('dDesc').textContent = it.desc;
+  el('dStd').textContent = it.stdVer;
+  el('dMeta').textContent = `操作人 ${it.operator} · ${it.time}`;
+  el('cmpList').innerHTML = it.compare.map(c=>`
+    <div class="cmp-row">
+      <div class="cmp-name">${c.label}</div>
+      <div>${badge(c.status)}</div>
+      <div class="cmp-score">${c.score}</div>
+      <div class="cmp-note">${c.note}</div>
+    </div>`).join('');
+  el('verdictBadgeWrap').innerHTML = badge(it.judgment, true);
+  el('verdictText').textContent = it.conclusion;
+}
+
+function renderDiff(){
+  const it = getItem(currentId);
+  const variant = it.judgment==='fail' ? 'fail' : (it.judgment==='review' ? 'review' : 'pass');
+  el('diffReal').innerHTML = boxSVG(variant) + diffOverlay(it.diff) + loupeHTML(variant, it.diff);
+  el('diffStd').innerHTML = boxSVG('std');
+  const note = el('diffNote');
+  note.className = 'diff-note ' + (it.diff.hasDiff ? 'bad' : (it.diff.gray ? 'warn' : 'ok'));
+  note.textContent = it.diff.desc;
+}
+
+function distHTML(d){
+  return `<span class="dist"><i class="db ok"></i>通过 ${d.pass}</span>
+    <span class="dist"><i class="db bad"></i>不通过 ${d.fail}</span>
+    <span class="dist"><i class="db warn"></i>待复核 ${d.review}</span>
+    <span class="dist"><i class="db na"></i>NA ${d.na}</span>
+    <span class="dist"><i class="db info"></i>待判定 ${d.pending}</span>`;
+}
+
+function renderSummary(){
+  const total = ITEMS.length;
+  const judged = ITEMS.filter(i=>i.judgment!=='pending').length;
+  const c = k => ITEMS.filter(i=>i.judgment===k).length;
+  const pass=c('pass'), fail=c('fail'), review=c('review'), na=c('na'), pending=c('pending');
+  const rate = judged ? Math.round(pass/judged*100) : 0;
+  el('sumJudged').textContent = `${judged}/${total}`;
+  el('sumRate').textContent = `${rate}%`;
+  el('sumDist').innerHTML = distHTML({pass,fail,review,na,pending});
+
+  const boxes=['箱1','箱2','箱3'];
+  let rows='';
+  boxes.forEach(box=>{
+    const items = ITEMS.filter(i=>i.box===box);
+    const p=items.filter(i=>i.judgment==='pass').length;
+    const f=items.filter(i=>i.judgment==='fail').length;
+    const r=items.filter(i=>i.judgment==='review').length;
+    let concl='pending';
+    if(f>0) concl='fail';
+    else if(r>0) concl='review';
+    else if(items.every(i=>i.judgment==='pass')) concl='pass';
+    else concl='pending';
+    rows += `<tr>
+      <td>${box}</td><td class="num">${items.length}</td>
+      <td class="num">${p}</td><td class="num">${f}</td><td class="num">${r}</td>
+      <td>${badge(concl)}</td></tr>`;
+  });
+  const anyFail=ITEMS.some(i=>i.judgment==='fail');
+  const anyReview=ITEMS.some(i=>i.judgment==='review');
+  const allPass=ITEMS.every(i=>i.judgment==='pass'||i.judgment==='na');
+  let overall='pending';
+  if(anyFail) overall='fail'; else if(anyReview) overall='review'; else if(allPass) overall='pass';
+  rows += `<tr class="sum-row">
+    <td>任务单汇总</td><td class="num">${total}</td>
+    <td class="num">${pass}</td><td class="num">${fail}</td><td class="num">${review}</td>
+    <td>${badge(overall)}</td></tr>`;
+  el('boxSumBody').innerHTML = rows;
+}
+
+function renderAll(){ renderNav(); renderDetail(); renderDiff(); renderSummary(); }
+
+/* ============ 质量门控 ============ */
+function showGate(state){
+  const fb = el('gateFeedback');
+  if(state==='ok'){
+    fb.className='gate-feedback ok show';
+    fb.innerHTML = `<span class="dot"></span> 图像质量达标，已进入比对`;
+  } else {
+    fb.className='gate-feedback bad show';
+    fb.innerHTML = `<span class="dot"></span> 图像模糊 / 角度偏斜，请重拍 <button class="btn btn-danger btn-sm" onclick="showGate('ok')">重新上传</button>`;
+  }
+}
+
+/* ============ 三态判定 ============ */
+function applyJudgment(id, act){
+  const it = getItem(id);
+  if(act==='pass'){ it.judgment='pass'; it.conclusion='已人工确认通过。'; it.diff={hasDiff:false,gray:false,desc:'未发现显著差异。'}; }
+  else if(act==='fail'){ it.judgment='fail'; it.conclusion='已标记不通过，转异常处理。'; it.diff={hasDiff:true,gray:false,desc:'实拍与标准图存在差异，已标记不通过。'}; }
+  else if(act==='review'){ it.judgment='review'; it.conclusion='已转人工复核。'; it.diff={hasDiff:false,gray:true,desc:'存在疑似，已转人工复核。'}; }
+  else if(act==='na'){ it.judgment='na'; it.conclusion='该项不适用（NA）。'; it.diff={hasDiff:false,gray:false,desc:'该项不适用。'}; }
+  renderAll();
+}
+
+/* ============ 初始化 ============ */
+el('simOk').onclick = ()=>showGate('ok');
+el('simBad').onclick = ()=>showGate('bad');
+el('uploadDrop').onclick = ()=>showGate('ok');
+document.querySelectorAll('#verdictActions .btn').forEach(b=>{
+  b.onclick = ()=>applyJudgment(currentId, b.dataset.act);
+});
+el('sumToggle').onclick = ()=>{
+  const b = el('sumBody'), t = el('sumToggle');
+  const hidden = b.style.display==='none';
+  b.style.display = hidden ? '' : 'none';
+  t.textContent = hidden ? '收起 ▾' : '展开 ▸';
+};
+showGate('ok');
+renderAll();
+
+</script>
+<script>
+/* 页面 2 原生交互（选择器已限定作用域） */
+
+    var tabs=document.querySelectorAll('#page-flow .tab');
+    var panels=document.querySelectorAll('#page-flow .panel');
+    tabs.forEach(function(t){
+      t.addEventListener('click',function(){
+        tabs.forEach(function(x){x.classList.remove('active')});
+        panels.forEach(function(p){p.classList.remove('active')});
+        t.classList.add('active');
+        document.getElementById(t.dataset.target).classList.add('active');
+      });
+    });
+  
+</script>
+</body>
+</html>
